@@ -21,13 +21,11 @@ impl crate::Device {
     pub(crate) async fn new_dx12(
         adapter: &wgpu::Adapter,
         desc: &DeviceDescriptor<'_>,
-        trace_path: Option<&std::path::Path>,
     ) -> Result<(Self, wgpu::Queue), crate::DeviceCreateError> {
         // # SAFETY: the raw handle is not manually destroyed.
         let adapter_dx12_desc = unsafe {
-            adapter.as_hal::<Dx12, _, _>(|adapter| {
-                adapter.map(|adapter| adapter.raw_adapter().GetDesc2().unwrap())
-            })
+            let adapter = adapter.as_hal::<Dx12>();
+            adapter.map(|adapter| adapter.raw_adapter().GetDesc2().unwrap())
         };
         let Some(dx_desc) = adapter_dx12_desc else {
             return Err(crate::DeviceCreateError::UnsupportedBackend(
@@ -36,7 +34,7 @@ impl crate::Device {
         };
         let device =
             unsafe { oidn::sys::oidnNewDeviceByLUID((&dx_desc.AdapterLuid) as *const _ as _) };
-        Self::new_from_raw_oidn_adapter(device, adapter, desc, trace_path, |flag| {
+        Self::new_from_raw_oidn_adapter(device, adapter, desc, |flag| {
             (flag & OIDNExternalMemoryTypeFlag_OIDN_EXTERNAL_MEMORY_TYPE_FLAG_OPAQUE_WIN32 != 0)
                 .then_some(crate::BackendData::Dx12)
         })
@@ -49,8 +47,10 @@ impl crate::Device {
         debug_assert_eq!(self.backend_data.as_backend(), crate::Backend::Dx12);
 
         // # SAFETY: the raw handle is not manually destroyed.
+        let device = unsafe {
+            self.wgpu_device.as_hal::<Dx12>()
+        };
         unsafe {
-            self.wgpu_device.as_hal::<Dx12, _, _>(|device| {
                 let device = device.unwrap();
                 let properties = D3D12_HEAP_PROPERTIES {
                     Type: D3D12_HEAP_TYPE_CUSTOM,
@@ -155,7 +155,6 @@ impl crate::Device {
                     wgpu_buffer,
                     oidn_buffer: self.oidn_device.create_buffer_from_raw(oidn_buffer),
                 })
-            })
-        }
+            }
     }
 }

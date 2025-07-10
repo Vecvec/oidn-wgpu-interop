@@ -95,13 +95,12 @@ impl Device {
     pub async fn new(
         adapter: &wgpu::Adapter,
         desc: &wgpu::DeviceDescriptor<'_>,
-        trace_path: Option<&std::path::Path>,
     ) -> Result<(Self, wgpu::Queue), DeviceCreateError> {
         match adapter.get_info().backend {
             #[cfg(vulkan)]
-            wgpu::Backend::Vulkan => Self::new_vulkan(adapter, desc, trace_path).await,
+            wgpu::Backend::Vulkan => Self::new_vulkan(adapter, desc).await,
             #[cfg(dx12)]
-            wgpu::Backend::Dx12 => Self::new_dx12(adapter, desc, trace_path).await,
+            wgpu::Backend::Dx12 => Self::new_dx12(adapter, desc).await,
             _ => Err(DeviceCreateError::UnsupportedBackend(
                 adapter.get_info().backend,
             )),
@@ -135,7 +134,6 @@ impl Device {
         device: oidn::sys::OIDNDevice,
         adapter: &wgpu::Adapter,
         desc: &wgpu::DeviceDescriptor<'_>,
-        trace_path: Option<&std::path::Path>,
         backend_data_callback: F,
     ) -> Result<(Self, wgpu::Queue), DeviceCreateError> {
         if device.is_null() {
@@ -154,7 +152,7 @@ impl Device {
         };
         let oidn_device = unsafe { oidn::Device::from_raw(device) };
         let (wgpu_device, queue) = adapter
-            .request_device(desc, trace_path)
+            .request_device(desc)
             .await
             .map_err(crate::DeviceCreateError::RequestDeviceError)?;
         Ok((
@@ -214,7 +212,7 @@ async fn test() {
             _ => continue,
         }
         let (device, queue) =
-            match Device::new(&adapter, &wgpu::DeviceDescriptor::default(), None).await {
+            match Device::new(&adapter, &wgpu::DeviceDescriptor::default()).await {
                 Ok((device, queue)) => (device, queue),
                 Err(err) => {
                     eprintln!("Device creation failed");
