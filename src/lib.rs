@@ -211,15 +211,15 @@ async fn test() {
             }
             _ => continue,
         }
-        let (device, queue) =
-            match Device::new(&adapter, &wgpu::DeviceDescriptor::default()).await {
-                Ok((device, queue)) => (device, queue),
-                Err(err) => {
-                    eprintln!("Device creation failed");
-                    eprintln!("    {err:?}");
-                    continue;
-                }
-            };
+        let (device, queue) = match Device::new(&adapter, &wgpu::DeviceDescriptor::default()).await
+        {
+            Ok((device, queue)) => (device, queue),
+            Err(err) => {
+                eprintln!("Device creation failed");
+                eprintln!("    {err:?}");
+                continue;
+            }
+        };
         let mut bufs = device
             .allocate_shared_buffers(size_of::<[f32; 3]>() as wgpu::BufferAddress)
             .unwrap();

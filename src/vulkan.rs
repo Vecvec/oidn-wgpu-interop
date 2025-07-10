@@ -67,24 +67,28 @@ impl crate::Device {
 
                     // `get_physical_device_properties2` requires version >= 1.1
                     (any_supported
-                        && unsafe {adapter
-                            .shared_instance()
-                            .raw_instance()
-                            .get_physical_device_properties(adapter.raw_physical_device())}
-                            .api_version
+                        && unsafe {
+                            adapter
+                                .shared_instance()
+                                .raw_instance()
+                                .get_physical_device_properties(adapter.raw_physical_device())
+                        }
+                        .api_version
                             >= vk::API_VERSION_1_1)
                         .then_some(adapter)
                 })
                 .map(|adapter| {
                     let mut id_properties = vk::PhysicalDeviceIDProperties::default();
-                    unsafe {adapter
-                        .shared_instance()
-                        .raw_instance()
-                        .get_physical_device_properties2(
-                            adapter.raw_physical_device(),
-                            &mut vk::PhysicalDeviceProperties2::default()
-                                .push_next(&mut id_properties),
-                        )};
+                    unsafe {
+                        adapter
+                            .shared_instance()
+                            .raw_instance()
+                            .get_physical_device_properties2(
+                                adapter.raw_physical_device(),
+                                &mut vk::PhysicalDeviceProperties2::default()
+                                    .push_next(&mut id_properties),
+                            )
+                    };
                     id_properties
                 })
         };
@@ -165,21 +169,23 @@ impl crate::Device {
             .sharing_mode(vk::SharingMode::EXCLUSIVE)
             .push_next(&mut vk_external_memory_info);
 
-        let raw_buffer = unsafe {device
-            .raw_device()
-            .create_buffer(&vk_info, None)}
+        let raw_buffer = unsafe { device.raw_device().create_buffer(&vk_info, None) }
             .map_err(|_| crate::SharedBufferCreateError::OutOfMemory)?;
 
-        let req = unsafe {device
-            .raw_device()
-            .get_buffer_memory_requirements(raw_buffer)};
+        let req = unsafe {
+            device
+                .raw_device()
+                .get_buffer_memory_requirements(raw_buffer)
+        };
 
         let aligned_size = align_to(size, req.alignment);
 
-        let mem_properties = unsafe {device
-            .shared_instance()
-            .raw_instance()
-            .get_physical_device_memory_properties(device.raw_physical_device())};
+        let mem_properties = unsafe {
+            device
+                .shared_instance()
+                .raw_instance()
+                .get_physical_device_memory_properties(device.raw_physical_device())
+        };
 
         let mut idx = None;
 
@@ -218,15 +224,17 @@ impl crate::Device {
 
         info = info.push_next(&mut export_alloc_info);
 
-        let memory = match unsafe {device.raw_device().allocate_memory(&info, None)} {
+        let memory = match unsafe { device.raw_device().allocate_memory(&info, None) } {
             Ok(memory) => memory,
             Err(_) => return Err(crate::SharedBufferCreateError::OutOfMemory),
         };
 
-        unsafe {device
-            .raw_device()
-            .bind_buffer_memory(raw_buffer, memory, 0)}
-            .map_err(|_| crate::SharedBufferCreateError::OutOfMemory)?;
+        unsafe {
+            device
+                .raw_device()
+                .bind_buffer_memory(raw_buffer, memory, 0)
+        }
+        .map_err(|_| crate::SharedBufferCreateError::OutOfMemory)?;
 
         let oidn_buffer = match data {
             VulkanSharingMode::Win32 => unsafe {
@@ -246,7 +254,7 @@ impl crate::Device {
                     ptr::null(),
                     size as usize,
                 )
-            }
+            },
             VulkanSharingMode::Fd => unsafe {
                 let bit = fd_funcs
                     .as_ref()
@@ -263,23 +271,24 @@ impl crate::Device {
                     bit as _,
                     size as usize,
                 )
-            }
+            },
             VulkanSharingMode::Dma => {
-                let bit = unsafe {fd_funcs
-                    .as_ref()
-                    .unwrap()
-                    .get_memory_fd(
+                let bit = unsafe {
+                    fd_funcs.as_ref().unwrap().get_memory_fd(
                         &vk::MemoryGetFdInfoKHR::default()
                             .memory(memory)
                             .handle_type(vk::ExternalMemoryHandleTypeFlags::DMA_BUF_EXT),
-                    )}
-                    .map_err(|_| crate::SharedBufferCreateError::OutOfMemory)?;
-                unsafe {oidn::sys::oidnNewSharedBufferFromFD(
-                    self.oidn_device.raw(),
-                    OIDNExternalMemoryTypeFlag_OIDN_EXTERNAL_MEMORY_TYPE_FLAG_DMA_BUF,
-                    bit as _,
-                    size as usize,
-                )}
+                    )
+                }
+                .map_err(|_| crate::SharedBufferCreateError::OutOfMemory)?;
+                unsafe {
+                    oidn::sys::oidnNewSharedBufferFromFD(
+                        self.oidn_device.raw(),
+                        OIDNExternalMemoryTypeFlag_OIDN_EXTERNAL_MEMORY_TYPE_FLAG_DMA_BUF,
+                        bit as _,
+                        size as usize,
+                    )
+                }
             }
         };
         if oidn_buffer.is_null() {
@@ -287,24 +296,28 @@ impl crate::Device {
                 self.oidn_device.get_error().unwrap_err(),
             ));
         }
-        let buf = unsafe {vulkan::Buffer::from_raw_managed(raw_buffer, memory, 0, size)};
+        let buf = unsafe { vulkan::Buffer::from_raw_managed(raw_buffer, memory, 0, size) };
         let mut encoder = self.wgpu_device.create_command_encoder(&Default::default());
         // # SAFETY: the raw handle is not manually destroyed.
-        unsafe {encoder.as_hal_mut::<Vulkan, _, _>(|encoder| {
-            encoder.unwrap().clear_buffer(&buf, 0..size);
-        })};
+        unsafe {
+            encoder.as_hal_mut::<Vulkan, _, _>(|encoder| {
+                encoder.unwrap().clear_buffer(&buf, 0..size);
+            })
+        };
         self.queue.submit([encoder.finish()]);
         // # SAFETY: Just initialized buffer, created it from the same device and made with
         // the manually mapped usages.
-        let wgpu_buffer = unsafe {self.wgpu_device.create_buffer_from_hal::<Vulkan>(
-            buf,
-            &BufferDescriptor {
-                label: None,
-                size,
-                usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-                mapped_at_creation: false,
-            },
-        )};
+        let wgpu_buffer = unsafe {
+            self.wgpu_device.create_buffer_from_hal::<Vulkan>(
+                buf,
+                &BufferDescriptor {
+                    label: None,
+                    size,
+                    usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                },
+            )
+        };
         Ok(crate::SharedBuffer {
             _allocation: crate::Allocation::Vulkan {
                 _vulkan: VulkanAllocation {
@@ -313,7 +326,7 @@ impl crate::Device {
                 },
             },
             wgpu_buffer,
-            oidn_buffer: unsafe {self.oidn_device.create_buffer_from_raw(oidn_buffer)},
+            oidn_buffer: unsafe { self.oidn_device.create_buffer_from_raw(oidn_buffer) },
         })
     }
 }
