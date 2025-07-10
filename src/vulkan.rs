@@ -14,25 +14,11 @@ use wgpu::{BufferDescriptor, BufferUsages, DeviceDescriptor};
 // We can't rely on the windows crate existing here and this may also be either a u32 or u64.
 const ACCESS_GENERIC_ALL: vk::DWORD = 268435456;
 
-pub(crate) struct VulkanAllocation {
-    memory: vk::DeviceMemory,
-    wgpu_device: wgpu::Device,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum VulkanSharingMode {
     Win32,
     Fd,
     Dma,
-}
-
-impl Drop for VulkanAllocation {
-    fn drop(&mut self) {
-        unsafe {
-            let device = self.wgpu_device.as_hal::<Vulkan>().unwrap();
-            device.raw_device().free_memory(self.memory, None);
-        }
-    }
 }
 
 impl crate::Device {
@@ -319,12 +305,7 @@ impl crate::Device {
             )
         };
         Ok(crate::SharedBuffer {
-            _allocation: crate::Allocation::Vulkan {
-                _vulkan: VulkanAllocation {
-                    memory,
-                    wgpu_device: self.wgpu_device.clone(),
-                },
-            },
+            _allocation: crate::Allocation::Vulkan,
             wgpu_buffer,
             oidn_buffer: unsafe { self.oidn_device.create_buffer_from_raw(oidn_buffer) },
         })

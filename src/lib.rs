@@ -172,7 +172,7 @@ enum Allocation {
     #[cfg(dx12)]
     Dx12 { _dx12: dx12::Dx12Allocation },
     #[cfg(vulkan)]
-    Vulkan { _vulkan: vulkan::VulkanAllocation },
+    Vulkan,
 }
 
 pub struct SharedBuffer {
