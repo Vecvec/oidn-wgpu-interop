@@ -6,7 +6,7 @@ license = "MIT"
 description = "An inteoperability layer between wgpu and oidn"
 keywords = ["interoperability", "compatability", "oidn", "wgpu"]
 repository = "https://github.com/Vecvec/oidn-wgpu-interop"
-exclude = [".cargo/*"]
+exclude = [".cargo/*", ".github/*"]
 
 [package.metadata.docs.rs]
 all-features = true
