@@ -225,7 +225,10 @@ async fn test() {
             .unwrap();
         queue.write_buffer(bufs.wgpu_buffer(), 0, &1.0_f32.to_ne_bytes());
         queue.submit([]);
-        device.wgpu_device().poll(wgpu::PollType::wait_indefinitely()).unwrap();
+        device
+            .wgpu_device()
+            .poll(wgpu::PollType::wait_indefinitely())
+            .unwrap();
         assert_eq!(bufs.oidn_buffer_mut().read()[0], 1.0);
         let mut filter = oidn::RayTracing::new(device.oidn_device());
         filter.image_dimensions(1, 1);
