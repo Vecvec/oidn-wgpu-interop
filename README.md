@@ -41,10 +41,9 @@ any OIDN functions that use this buffer must have finished.
 
 ## Platform Support
 
-Currently, this only supports DirectX12 and Vulkan (on
-Windows using `VK_KHR_external_memory_win32`). This code
-could be expanded to Vulkan (on Linux using
-`VK_KHR_external_memory_fd`) and Metal. Due to some devices
-being unsupported by OIDN it is recommended to support a
-mode that copies to the cpu and then into an OIDN buffer
-anyway.
+Currently the following platforms are supported (individual GPUs may or may not be supported):
+- DirectX (tested personally)
+- Vulkan on Windows (tested personally)
+- Vulkan on Linux (best effort, will compile)
+
+Platform support could also be expanded to Metal, but I don't want to do too much.
