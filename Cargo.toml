@@ -1,6 +1,6 @@
 [package]
 name = "oidn-wgpu-interop"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 description = "An inteoperability layer between wgpu and oidn"
@@ -14,8 +14,10 @@ targets = ["x86_64-pc-windows-msvc"]
 
 [dependencies]
 oidn = "2.3.2"
-wgpu = "26"
-wgpu-hal = "24.0.2"
+wgpu = "27"
+wgpu-hal = "27"
+# need to remove next update, encode on finish broke the earlier versions.
+wgpu-core = ">=27.0.3"
 windows = "0.58.0"
 ash = "0.38.0"
 
