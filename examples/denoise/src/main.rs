@@ -62,9 +62,8 @@ fn main() {
     let mut encoder = device.wgpu_device().create_command_encoder(&Default::default());
     encoder.copy_buffer_to_buffer(shared_buffer.wgpu_buffer(), 0, &out_buffer, 0, image_byte_size as u64);
     let (send, recv) = mpsc::channel();
-    //encoder.map_buffer_on_submit(&out_buffer, wgpu::MapMode::Read, .., move |res| {res.unwrap(); send.send(()).unwrap()});
+    encoder.map_buffer_on_submit(&out_buffer, wgpu::MapMode::Read, .., move |res| {res.unwrap(); send.send(()).unwrap()});
     queue.submit([encoder.finish()]);
-    out_buffer.map_async(wgpu::MapMode::Read, .., move |res| {res.unwrap(); send.send(()).unwrap()});
 
     // Wait for copy to finish, so we can save to disk.
     device.wgpu_device().poll(PollType::wait_indefinitely()).unwrap();
