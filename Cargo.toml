@@ -13,7 +13,7 @@ all-features = true
 targets = ["x86_64-pc-windows-msvc"]
 
 [dependencies]
-oidn = "2.3.2"
+oidn = "2.3.3"
 wgpu = "27"
 wgpu-hal = "27"
 # need to remove next update, encode on finish broke the earlier versions.

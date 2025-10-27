@@ -778,9 +778,9 @@ dependencies = [
 
 [[package]]
 name = "oidn"
-version = "2.3.2"
+version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8840baa4530f893ab4d0ea828a3bd4c000ffa1c273d55a52d3a2e15d6453de5"
+checksum = "12331c17ab2164afb05093c59e3eaf315466fe8551b7024327d579874b4ffb8f"
 dependencies = [
  "num_enum",
  "pkg-config",
