@@ -1,0 +1,16 @@
+[package]
+name = "oidn-wgpu-interop-denoise"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+oidn = "2.3.3"
+wgpu = "27"
+futures = "0.3.30"
+oidn-wgpu-interop = { path = "../../"}
+bytemuck = { version =  "1.22.0"}
+
+[dependencies.image]
+version = "0.25.1"
+default-features = false
+features = ["png", "jpeg"]
