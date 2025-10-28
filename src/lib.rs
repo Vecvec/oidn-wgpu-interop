@@ -287,7 +287,7 @@ async fn test_validity() {
         {
             use std::sync::mpsc;
 
-            use wgpu::{wgt::BufferDescriptor, BufferAddress, BufferUsages, PollType};
+            use wgpu::{BufferAddress, BufferUsages, PollType, wgt::BufferDescriptor};
 
             let bufs = device
                 .allocate_shared_buffers(size_of::<[f32; 3]>() as wgpu::BufferAddress)
@@ -295,17 +295,38 @@ async fn test_validity() {
             let buffer = bufs.wgpu_buffer().clone();
             drop(bufs);
             queue.write_buffer(&buffer, 0, &1.0_f32.to_ne_bytes());
-            let readback_buffer = device.wgpu_device().create_buffer(&BufferDescriptor { label: Some("readback"), size: size_of::<f32>() as _, usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST, mapped_at_creation: false });
-            let mut encoder = device.wgpu_device().create_command_encoder(&Default::default());
-            encoder.copy_buffer_to_buffer(&buffer, 0, &readback_buffer, 0, size_of::<f32>() as BufferAddress);
+            let readback_buffer = device.wgpu_device().create_buffer(&BufferDescriptor {
+                label: Some("readback"),
+                size: size_of::<f32>() as _,
+                usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            let mut encoder = device
+                .wgpu_device()
+                .create_command_encoder(&Default::default());
+            encoder.copy_buffer_to_buffer(
+                &buffer,
+                0,
+                &readback_buffer,
+                0,
+                size_of::<f32>() as BufferAddress,
+            );
             let (send, recv) = mpsc::channel();
-            encoder.map_buffer_on_submit(&readback_buffer, wgpu::MapMode::Read, .., move |_| send.send(()).unwrap());
+            encoder.map_buffer_on_submit(&readback_buffer, wgpu::MapMode::Read, .., move |_| {
+                send.send(()).unwrap()
+            });
             queue.submit([encoder.finish()]);
-            device.wgpu_device().poll(PollType::wait_indefinitely()).unwrap();
+            device
+                .wgpu_device()
+                .poll(PollType::wait_indefinitely())
+                .unwrap();
             recv.recv().unwrap();
-            
+
             let view = readback_buffer.get_mapped_range(..);
-            assert_eq!(f32::from_ne_bytes([view[0], view[1], view[2], view[3]]), 1.0_f32);
+            assert_eq!(
+                f32::from_ne_bytes([view[0], view[1], view[2], view[3]]),
+                1.0_f32
+            );
 
             eprintln!("    Tested oidn drop");
         }
