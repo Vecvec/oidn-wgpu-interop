@@ -241,3 +241,73 @@ async fn test() {
         }
     }
 }
+
+// Ensure that dropping one or the other shared buffers does not break anything.
+#[cfg(test)]
+#[async_std::test]
+async fn test_validity() {
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::DX12 | wgpu::Backends::VULKAN,
+        ..Default::default()
+    });
+    let adapters = instance.enumerate_adapters(wgpu::Backends::all());
+    for adapter in adapters {
+        match adapter.get_info().backend {
+            wgpu::Backend::Vulkan => {
+                eprintln!("Testing vulkan device {}", adapter.get_info().name);
+            }
+            wgpu::Backend::Dx12 => {
+                eprintln!("Testing dx12 device {}", adapter.get_info().name);
+            }
+            _ => continue,
+        }
+        let (device, queue) = match Device::new(&adapter, &wgpu::DeviceDescriptor::default()).await
+        {
+            Ok((device, queue)) => (device, queue),
+            Err(err) => {
+                eprintln!("Device creation failed");
+                eprintln!("    {err:?}");
+                continue;
+            }
+        };
+        {
+            let mut bufs = device
+                .allocate_shared_buffers(size_of::<[f32; 3]>() as wgpu::BufferAddress)
+                .unwrap();
+            queue.write_buffer(bufs.wgpu_buffer(), 0, &1.0_f32.to_ne_bytes());
+            queue.submit([]);
+            bufs.wgpu_buffer().destroy();
+            device
+                .wgpu_device()
+                .poll(wgpu::PollType::wait_indefinitely())
+                .unwrap();
+            assert_eq!(bufs.oidn_buffer_mut().read()[0], 1.0);
+            eprintln!("    Tested wgpu destroy");
+        }
+        {
+            use std::sync::mpsc;
+
+            use wgpu::{wgt::BufferDescriptor, BufferAddress, BufferUsages, PollType};
+
+            let bufs = device
+                .allocate_shared_buffers(size_of::<[f32; 3]>() as wgpu::BufferAddress)
+                .unwrap();
+            let buffer = bufs.wgpu_buffer().clone();
+            drop(bufs);
+            queue.write_buffer(&buffer, 0, &1.0_f32.to_ne_bytes());
+            let readback_buffer = device.wgpu_device().create_buffer(&BufferDescriptor { label: Some("readback"), size: size_of::<f32>() as _, usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST, mapped_at_creation: false });
+            let mut encoder = device.wgpu_device().create_command_encoder(&Default::default());
+            encoder.copy_buffer_to_buffer(&buffer, 0, &readback_buffer, 0, size_of::<f32>() as BufferAddress);
+            let (send, recv) = mpsc::channel();
+            encoder.map_buffer_on_submit(&readback_buffer, wgpu::MapMode::Read, .., move |_| send.send(()).unwrap());
+            queue.submit([encoder.finish()]);
+            device.wgpu_device().poll(PollType::wait_indefinitely()).unwrap();
+            recv.recv().unwrap();
+            
+            let view = readback_buffer.get_mapped_range(..);
+            assert_eq!(f32::from_ne_bytes([view[0], view[1], view[2], view[3]]), 1.0_f32);
+
+            eprintln!("    Tested oidn drop");
+        }
+    }
+}
