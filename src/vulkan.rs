@@ -82,7 +82,16 @@ impl crate::Device {
             return Err(crate::DeviceCreateError::MissingFeature);
         };
         let device = unsafe {
-            oidn::sys::oidnNewDeviceByUUID((&vk_desc.device_uuid) as *const _ as *const _)
+            let mut dev_raw: oidn::sys::OIDNDevice = std::ptr::null_mut();
+            if dev_raw.is_null() && vk_desc.device_luid_valid == vk::TRUE {
+                dev_raw =
+                    oidn::sys::oidnNewDeviceByLUID((&vk_desc.device_luid) as *const _ as *const _)
+            }
+            if dev_raw.is_null() {
+                dev_raw =
+                    oidn::sys::oidnNewDeviceByUUID((&vk_desc.device_uuid) as *const _ as *const _)
+            }
+            dev_raw
         };
         Self::new_from_raw_oidn_adapter(device, adapter, desc, |flag| {
             let oidn_supports_win32 =
