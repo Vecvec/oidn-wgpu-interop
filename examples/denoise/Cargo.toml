@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 oidn = "2.3.3"
-wgpu = "27"
+wgpu = "28"
 futures = "0.3.30"
 oidn-wgpu-interop = { path = "../../"}
 bytemuck = { version =  "1.22.0"}

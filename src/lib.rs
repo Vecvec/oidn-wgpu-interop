@@ -200,7 +200,7 @@ async fn test() {
         backends: wgpu::Backends::DX12 | wgpu::Backends::VULKAN,
         ..Default::default()
     });
-    let adapters = instance.enumerate_adapters(wgpu::Backends::all());
+    let adapters = instance.enumerate_adapters(wgpu::Backends::all()).await;
     for adapter in adapters {
         match adapter.get_info().backend {
             wgpu::Backend::Vulkan => {
@@ -250,7 +250,7 @@ async fn test_validity() {
         backends: wgpu::Backends::DX12 | wgpu::Backends::VULKAN,
         ..Default::default()
     });
-    let adapters = instance.enumerate_adapters(wgpu::Backends::all());
+    let adapters = instance.enumerate_adapters(wgpu::Backends::all()).await;
     for adapter in adapters {
         match adapter.get_info().backend {
             wgpu::Backend::Vulkan => {

@@ -16,11 +16,9 @@ targets = ["x86_64-pc-windows-msvc"]
 
 [dependencies]
 oidn = "2.3.3"
-wgpu = "27"
-wgpu-hal = "27"
-# need to remove next update, encode on finish broke the earlier versions.
-wgpu-core = ">=27.0.3"
-windows = "0.58.0"
+wgpu = "28"
+wgpu-hal = "28"
+windows = "0.62"
 ash = "0.38.0"
 
 [build-dependencies]

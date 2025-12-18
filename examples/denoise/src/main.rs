@@ -17,7 +17,7 @@ fn main() {
 
     let mut device_queue = None;
 
-    for adapter in instance.enumerate_adapters(Backends::all()) {
+    for adapter in block_on(instance.enumerate_adapters(Backends::all())) {
         if let Ok(dev) = block_on(oidn_wgpu_interop::Device::new(
             &adapter,
             &DeviceDescriptor::default(),
