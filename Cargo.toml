@@ -18,7 +18,6 @@ targets = ["x86_64-pc-windows-msvc"]
 oidn = "2.3.3"
 wgpu = "28"
 wgpu-hal = "28"
-windows = "0.62"
 ash = "0.38.0"
 
 [build-dependencies]
@@ -34,3 +33,6 @@ default = ["dx12", "vulkan"]
 # affect this repository.
 dx12 = ["wgpu-hal/dx12"]
 vulkan = ["wgpu-hal/vulkan"]
+
+[target.'cfg(windows)'.dependencies]
+windows = "0.62"
