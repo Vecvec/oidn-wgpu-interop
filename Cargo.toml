@@ -2,7 +2,7 @@ workspace = { members = [ "examples/denoise"] }
 
 [package]
 name = "oidn-wgpu-interop"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 license = "MIT"
 description = "An inteoperability layer between wgpu and oidn"
@@ -16,8 +16,8 @@ targets = ["x86_64-pc-windows-msvc"]
 
 [dependencies]
 oidn = "2.3.3"
-wgpu = "28"
-wgpu-hal = "28"
+wgpu = "29"
+wgpu-hal = "29"
 ash = "0.38.0"
 
 [build-dependencies]

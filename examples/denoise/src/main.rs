@@ -13,7 +13,7 @@ fn main() {
         .to_rgb32f();
 
     // Set up the oidn shared device and wgpu queue
-    let instance = Instance::new(&InstanceDescriptor::default());
+    let instance = Instance::new(InstanceDescriptor::new_without_display_handle());
 
     let mut device_queue = None;
 

@@ -196,9 +196,9 @@ impl SharedBuffer {
 #[cfg(test)]
 #[async_std::test]
 async fn test() {
-    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends: wgpu::Backends::DX12 | wgpu::Backends::VULKAN,
-        ..Default::default()
+        ..wgpu::InstanceDescriptor::new_without_display_handle()
     });
     let adapters = instance.enumerate_adapters(wgpu::Backends::all()).await;
     for adapter in adapters {
@@ -246,9 +246,9 @@ async fn test() {
 #[cfg(test)]
 #[async_std::test]
 async fn test_validity() {
-    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends: wgpu::Backends::DX12 | wgpu::Backends::VULKAN,
-        ..Default::default()
+        ..wgpu::InstanceDescriptor::new_without_display_handle()
     });
     let adapters = instance.enumerate_adapters(wgpu::Backends::all()).await;
     for adapter in adapters {
